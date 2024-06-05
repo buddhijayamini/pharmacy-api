@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
+use Spatie\Permission\Traits\HasRoles; // Import the trait
+use Spatie\Permission\Models\Role; // Import the Role model
 
 class User extends Authenticatable
 {
@@ -24,7 +25,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'role'
+        'role_id'
     ];
 
     /**
@@ -38,10 +39,10 @@ class User extends Authenticatable
         'email_verified_at'
     ];
 
-       // Define roles as constants
-       public const ROLE_OWNER = 'owner';
-       public const ROLE_MANAGER = 'manager';
-       public const ROLE_CASHIER = 'cashier';
+    // Define roles as constants
+    // public const ROLE_OWNER = 'owner';
+    // public const ROLE_MANAGER = 'manager';
+    // public const ROLE_CASHIER = 'cashier';
 
     /**
      * Get the attributes that should be cast.
@@ -56,26 +57,28 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Check if the user has a specific role.
-     *
-     * @param  string|array  $roles
-     * @return bool
-     */
-    public function hasRole($roles)
-    {
-        return $this->hasAnyRole($roles);
-    }
 
-     // Define the relationship with the Customer model
-     public function customers()
-     {
-         return $this->hasMany(Customer::class);
-     }
+    // Define the relationship with the Customer model
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
 
     // Define the relationship with medications
     public function medications(): HasMany
     {
         return $this->hasMany(Medication::class);
+    }
+
+    // Define the relationship with the Role model
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function getStoredRole()
+    {
+        // Retrieve the role using the Spatie Permission package's methods
+        return Role::find($this->role_id);
     }
 }

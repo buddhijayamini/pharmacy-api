@@ -11,7 +11,7 @@ class Medication extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'name', 'description', 'quantity'
+        'user_id', 'customer_id','name', 'description', 'quantity', 'price'
     ];
 
      // Define the relationship with the User model

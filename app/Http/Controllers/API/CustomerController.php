@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Customer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +28,6 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         try {
-            DB::beginTransaction();
             // Validate the request data
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
@@ -40,8 +40,14 @@ class CustomerController extends Controller
                 return response()->json(['error' => $validator->errors()], 400);
             }
 
+            DB::beginTransaction();
+
+            // Add user_id to validated data
+            $validatedData = $validator->validated();
+            $validatedData['user_id'] = Auth::id();
+
             // Create the customer record
-            $customer = Customer::create($validator->validated());
+            $customer = Customer::create($validatedData);
 
             // Commit the transaction
             DB::commit();

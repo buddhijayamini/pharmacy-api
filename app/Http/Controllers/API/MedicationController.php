@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Medication;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -42,8 +43,15 @@ class MedicationController extends Controller
 
             DB::beginTransaction();
 
+            $cusId = (int)$request->customer_id;
+
+            // Add user_id to validated data
+            $validatedData = $validator->validated();
+            $validatedData['user_id'] = Auth::id();
+            $validatedData['customer_id'] = $cusId;
+
             // Create the medication record
-            $medication = Medication::create($validator->validated());
+            $medication = Medication::create($validatedData);
 
             // Commit the transaction
             DB::commit();

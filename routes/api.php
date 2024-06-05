@@ -69,5 +69,5 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/{customer}', [CustomerController::class, 'update'])->name('cashierUpdate');
         });
     });
-    
+
 });
