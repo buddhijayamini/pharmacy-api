@@ -25,10 +25,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/medications/{medication}', [MedicationController::class, 'destroy']);
         Route::patch('/medications/{medication}/restore', [MedicationController::class, 'restore']);
     });
+
     Route::middleware('role:Owner,Manager')->group(function () {
         Route::put('/medications/{medication}', [MedicationController::class, 'update']);
         Route::delete('/medications/{medication}/soft', [MedicationController::class, 'softDelete']);
     });
+    
     Route::middleware('role:Owner,Manager,Cashier')->group(function () {
         Route::patch('/medications/{medication}', [MedicationController::class, 'update']);
     });
