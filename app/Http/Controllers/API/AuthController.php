@@ -111,4 +111,17 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Log the user out.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
+    }
 }

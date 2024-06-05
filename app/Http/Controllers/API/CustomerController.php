@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -16,7 +17,8 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        return Customer::all();
+        $customers = Customer::all();
+        return response()->json(['customers' => $customers]);
     }
 
     /**
@@ -27,25 +29,25 @@ class CustomerController extends Controller
         try {
             DB::beginTransaction();
             // Validate the request data
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|unique:customers,email|email',
                 'phone' => 'required|string|max:255',
                 'address' => 'required|string',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
+
             // Create the customer record
-            $customer = Customer::create($validatedData);
+            $customer = Customer::create($validator->validated());
 
             // Commit the transaction
             DB::commit();
 
             // Return the response with the created customer data
             return response()->json($customer, 201);
-        } catch (ValidationException $e) {
-            // If validation fails, rollback the transaction and return validation errors
-            DB::rollBack();
-            return response()->json($e->errors(), 422);
         } catch (Throwable $e) {
             // If any other error occurs, rollback the transaction and return a generic error response
             DB::rollBack();
@@ -56,9 +58,13 @@ class CustomerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Customer $customer)
+    public function show(int $id)
     {
-        return $customer;
+        $customer = Customer::find($id);
+        if (!$customer) {
+            return response()->json(['error' => 'Customer not found'], 404);
+        }
+        return response()->json(['customer' => $customer]);
     }
 
     /**
@@ -67,27 +73,29 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         try {
-            DB::beginTransaction();
+
             // Validate the request data
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|unique:customers,email,' . $customer->id,
                 'phone' => 'required|string|max:255',
                 'address' => 'required|string',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
+
+            DB::beginTransaction();
+
             // Update the customer record
-            $customer->update($validatedData);
+            $customer->update($validator->validated());
 
             // Commit the transaction
             DB::commit();
 
             // Return the response with the updated customer data
             return response()->json($customer, 200);
-        } catch (ValidationException $e) {
-            // If validation fails, rollback the transaction and return validation errors
-            DB::rollBack();
-            return response()->json($e->errors(), 422);
         } catch (Throwable $e) {
             // If any other error occurs, rollback the transaction and return a JSON response with only the error message
             DB::rollBack();

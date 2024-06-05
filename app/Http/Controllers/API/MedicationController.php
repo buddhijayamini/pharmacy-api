@@ -6,6 +6,7 @@ use App\Models\Medication;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -16,7 +17,8 @@ class MedicationController extends Controller
      */
     public function index()
     {
-        return Medication::all();
+        $medications = Medication::all();
+        return response()->json(['medications' => $medications]);
     }
 
     /**
@@ -26,7 +28,7 @@ class MedicationController extends Controller
     {
         try {
             // Validate the request data
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'customer_id' => 'required|exists:customers,id',
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
@@ -34,21 +36,21 @@ class MedicationController extends Controller
                 'price' => 'required|numeric|min:0',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
+
             DB::beginTransaction();
 
             // Create the medication record
-            $medication = Medication::create($validatedData);
+            $medication = Medication::create($validator->validated());
 
             // Commit the transaction
             DB::commit();
 
             // Return the response
             return response()->json($medication, 201);
-        } catch (ValidationException $e) {
-            // If validation fails, rollback the transaction and return validation errors
-            DB::rollBack();
-            return response()->json($e->errors(), 422);
-        } catch (Throwable $e) {
+        }catch (Throwable $e) {
             // If any other error occurs, rollback the transaction and return a generic error response
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
@@ -58,9 +60,13 @@ class MedicationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Medication $medication)
+    public function show(int $id)
     {
-        return $medication;
+        $medication = Medication::find($id);
+        if (!$medication) {
+            return response()->json(['error' => 'Medication not found'], 404);
+        }
+        return response()->json(['medication' => $medication]);
     }
 
     /**
@@ -70,27 +76,28 @@ class MedicationController extends Controller
     {
         try {
             // Validate the request data
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
                 'quantity' => 'required|integer|min:1',
                 'price' => 'required|numeric|min:0',
             ]);
 
+
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
+
             DB::beginTransaction();
 
             // Update the medication record
-            $medication->update($validatedData);
+            $medication->update($validator->validated());
 
             // Commit the transaction
             DB::commit();
 
             // Return the response
             return response()->json($medication, 200);
-        } catch (ValidationException $e) {
-            // If validation fails, rollback the transaction and return validation errors
-            DB::rollBack();
-            return response()->json($e->errors(), 422);
         } catch (Throwable $e) {
             // If any other error occurs, rollback the transaction and return a generic error response
             DB::rollBack();
