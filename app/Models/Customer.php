@@ -11,6 +11,17 @@ class Customer extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'email', 'phone'
+        'user_id', 'name', 'email', 'phone', 'address'
     ];
+
+     // Define the relationship with the User model
+     public function user()
+     {
+         return $this->belongsTo(User::class);
+     }
+
+     public function medications()
+     {
+         return $this->hasMany(Medication::class);
+     }
 }

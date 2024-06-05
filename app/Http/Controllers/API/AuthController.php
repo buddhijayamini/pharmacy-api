@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 use Throwable;
 
 class AuthController extends Controller
@@ -25,12 +26,13 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
+
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|unique:users|email',
                 'username' => 'required|string|max:255|unique:users',
                 'password' => 'required|string|min:8',
-                'role' => 'required|string',
+                'role_id' => 'required|numeric|exists:roles,id',
             ]);
 
             if ($validator->fails()) {
@@ -40,6 +42,7 @@ class AuthController extends Controller
                     'errors' => $validator->errors()
                 ], 422);
             }
+            $roleId = (int)$request->role_id;
 
             DB::beginTransaction();
 
@@ -48,30 +51,19 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'role' => $request->role,
+                'role_id' => $roleId,
             ]);
+            // Assign role to the user
+            $role = Role::find($roleId);
+            $user->assignRole($role);
+
 
             $token = $user->createToken('authToken')->plainTextToken;
 
             DB::commit();
 
             return response()->json(['user' => $user, 'token' => $token], 201);
-
-        } catch (ValidationException $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation Exception',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Database Error',
-                'errors' => $e->getMessage()
-            ], 500);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
             return response()->json([
                 'status' => 'error',
@@ -102,13 +94,25 @@ class AuthController extends Controller
             $token = $user->createToken('authToken')->plainTextToken;
 
             return response()->json(['user' => $user, 'token' => $token], 200);
-
         } catch (Throwable $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Server Error',
-                'errors' => $e->getMessage(). "- Line -".$e->getLine()
+                'errors' => $e->getMessage() . "- Line -" . $e->getLine()
             ], 500);
         }
+    }
+
+    /**
+     * Log the user out.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }
