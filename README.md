@@ -11,62 +11,43 @@ PHP (>= 7.3)
 Composer
 MySQL
 Installation
-Clone the repository:
 
-bash
-Copy code
-git clone https://github.com/username/project.git
-Navigate to the project directory:
+1.Clone the repository:
+   git clone https://github.com/username/project.git
 
-bash
-Copy code
-cd project
-Install PHP dependencies:
+2.Navigate to the project directory:
+   cd project
 
-bash
-Copy code
-composer install
-Install the Spatie\Permission library:
+3.Install PHP dependencies:
+    composer install
 
-bash
-Copy code
-composer require spatie/laravel-permission
-Copy the .env.example file to .env:
+4.Install the Spatie\Permission library:
+    composer require spatie/laravel-permission
 
-bash
-Copy code
-cp .env.example .env
-Generate the application key:
+5.Copy the .env.example file to .env:
+    cp .env.example .env
 
-bash
-Copy code
-php artisan key:generate
-Set up your database in the .env file:
+6.Generate the application key:
+    php artisan key:generate
 
-bash
-Copy code
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=your_database_name
-DB_USERNAME=your_database_username
-DB_PASSWORD=your_database_password
-Run the database migrations:
+7.Set up your database in the .env file:
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=your_database_name
+    DB_USERNAME=your_database_username
+    DB_PASSWORD=your_database_password
+    
+8.Run the database migrations:
+    php artisan migrate
 
-bash
-Copy code
-php artisan migrate
-Seed the database with roles and permissions:
+9.Seed the database with roles and permissions:
+    php artisan db:seed --class=RolesAndPermissionsSeeder
 
-bash
-Copy code
-php artisan db:seed --class=RolesAndPermissionsSeeder
-Running the Application
-To start the development server, run:
+10.Running the Application
+ To start the development server, run:
+    php artisan serve
 
-bash
-Copy code
-php artisan serve
 The application will be accessible at http://localhost:8000 by default.
 
 Usage
